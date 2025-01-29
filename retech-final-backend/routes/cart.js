@@ -108,20 +108,20 @@ router.put('/update-quantity', async (req, res) => {
 
 // Delete Item from Cart Route
 router.post('/delete-item', async (req, res) => {
-  const { productId } = req.body; // deleted user id
+  const { cartId, productId } = req.body; // Added cartId to identify which cart to update
 
-  if (!productId) {
-    return res.status(400).json({ message: 'userId and productId are required.' });
+  if (!cartId || !productId) {
+    return res.status(400).json({ message: 'cartId and productId are required.' });
   }
 
   try {
     const result = await Cart.updateOne(
-
-      { $pull: { productsInCart: { productId } } }
+      { cartId: cartId }, // Filter by cartId
+      { $pull: { productsInCart: productId } } // Pull productId from productsInCart
     );
-    // console.log(result);
 
     if (result.modifiedCount > 0) {
+      const updatedCart = await Cart.findOne({ cartId: cartId });
       res.status(200).json({ success: true, message: 'Item deleted successfully.' });
     } else {
       res.status(404).json({ message: 'Item not found in the cart.' });
@@ -131,6 +131,7 @@ router.post('/delete-item', async (req, res) => {
     res.status(500).json({ message: 'An error occurred while deleting the item.' });
   }
 });
+
 
 // Remove Item from Cart Route
 router.post('/remove-item', async (req, res) => {
